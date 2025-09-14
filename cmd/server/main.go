@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/novaru/billing-service/db/generated"
 	"github.com/novaru/billing-service/internal/app/handler"
 	"github.com/novaru/billing-service/internal/app/repository"
@@ -20,18 +22,17 @@ import (
 )
 
 func main() {
+	cfg := config.Load()
+
 	// Initialize logger
-	if err := logger.Initialize(os.Getenv("ENV")); err != nil {
+	if err := logger.Initialize(cfg.Env); err != nil {
 		panic(err)
 	}
-
-	// Load configuration
-	cfg := config.Load()
 
 	// Initialize database
 	db, err := database.New(cfg.DatabaseURL)
 	if err != nil {
-		logger.Fatal("Failed to connect to database", err)
+		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
 	defer db.Close()
 
@@ -41,7 +42,7 @@ func main() {
 	userRepo := repository.NewUserRepository(q)
 
 	// Initialize services
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(cfg, userRepo)
 
 	// Initialize handlers
 	handlers := handler.New(
@@ -49,7 +50,7 @@ func main() {
 	)
 
 	// Setup router
-	r := router.New(handlers).Setup()
+	r := router.New(cfg, handlers).Setup()
 
 	// Start server
 	server := &http.Server{
@@ -64,7 +65,7 @@ func main() {
 	go func() {
 		logger.Info("Server starting on " + cfg.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("Server failed to start", err)
+			logger.Fatal("Server failed to start", zap.Error(err))
 		}
 	}()
 
@@ -80,7 +81,7 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatal("Server forced to shutdown", err)
+		logger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
 
 	logger.Info("Server exited gracefully")
