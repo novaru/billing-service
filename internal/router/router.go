@@ -8,14 +8,16 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/novaru/billing-service/internal/app/handler"
+	"github.com/novaru/billing-service/internal/config"
 )
 
 type Router struct {
+	config   *config.Config
 	handlers *handler.Handlers
 }
 
-func New(handlers *handler.Handlers) *Router {
-	return &Router{handlers: handlers}
+func New(cfg *config.Config, handlers *handler.Handlers) *Router {
+	return &Router{config: cfg, handlers: handlers}
 }
 
 func (rt *Router) Setup() chi.Router {

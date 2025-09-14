@@ -35,10 +35,10 @@ func Info(msg string, fields ...zap.Field) {
 	Log.Info(msg, fields...)
 }
 
-func Error(msg string, err error) {
-	Log.Error(msg, zap.Error(err))
+func Error(msg string, fields ...zap.Field) {
+	Log.Error(msg, fields...)
 }
 
-func Fatal(msg string, err error) {
-	Log.Fatal(msg, zap.Error(err))
+func Fatal(msg string, fields ...zap.Field) {
+	Log.Fatal(msg, fields...)
 }

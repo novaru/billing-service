@@ -76,6 +76,14 @@ func NewInvalidInputError(msg string, err error) *AppError {
 	}
 }
 
+func NewUnauthorizedError(msg string, err error) *AppError {
+	return &AppError{
+		Code:    "UNAUTHORIZED",
+		Message: msg,
+		Err:     err,
+	}
+}
+
 func NewInternalError(msg string, err error) *AppError {
 	return &AppError{
 		Code:    "INTERNAL_ERROR",
