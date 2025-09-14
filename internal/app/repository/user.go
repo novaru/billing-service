@@ -2,11 +2,16 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/novaru/billing-service/db/generated"
+	E "github.com/novaru/billing-service/internal/shared/errors"
+	"github.com/novaru/billing-service/pkg/logger"
 )
 
 type UserRepository interface {
@@ -46,15 +51,41 @@ func (r *userRepository) FindAll(ctx context.Context, limit, offset int32) ([]ge
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (generated.User, error) {
-	player, err := r.q.GetUserByID(ctx, id)
+	logger.Debug("retrieving user by ID", zap.String("user_id", id.String()))
+
+	user, err := r.q.GetUserByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			logger.Debug("user not found", zap.String("user_id", id.String()))
+			return generated.User{}, E.ErrNotFound
+		}
+
+		logger.Info("failed to get user by ID",
+			zap.String("user_id", id.String()),
+			zap.Error(err))
 		return generated.User{}, err
 	}
 
-	return player, nil
+	logger.Debug("successfully retrieved user", zap.String("user_id", id.String()))
+	return user, nil
 }
 
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (generated.User, error) {
-	// TODO: implement find by email
-	return generated.User{}, nil
+	logger.Debug("retrieving user by ID", zap.String("email", email))
+
+	user, err := r.q.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			logger.Debug("user not found", zap.String("email", email))
+			return generated.User{}, E.ErrNotFound
+		}
+
+		logger.Info("failed to get user by email",
+			zap.String("email", email),
+			zap.Error(err))
+		return generated.User{}, err
+	}
+
+	logger.Debug("successfully retrieved user", zap.String("email", email))
+	return user, nil
 }
