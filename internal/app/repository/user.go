@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -32,7 +31,7 @@ func NewUserRepository(q *generated.Queries) UserRepository {
 func (r *userRepository) Create(ctx context.Context, name, email, password_hash string) (generated.User, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		log.Fatal("failed to generate uuid:", err)
+		logger.Fatal("failed to generate uuid:", zap.Error(err))
 	}
 
 	return r.q.CreateUser(ctx, generated.CreateUserParams{
@@ -71,7 +70,7 @@ func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (generated.
 }
 
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (generated.User, error) {
-	logger.Debug("retrieving user by ID", zap.String("email", email))
+	logger.Debug("retrieving user by email", zap.String("email", email))
 
 	user, err := r.q.GetUserByEmail(ctx, email)
 	if err != nil {
