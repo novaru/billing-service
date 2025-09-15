@@ -1,6 +1,6 @@
 BINARY_NAME=billing-service
 DRIVER=postgres
-MIGRATIONS_DIR=./migrations
+MIGRATIONS_DIR=./db/migrations
 
 # loads .env file if it exists
 ifneq (,$(wildcard ./.env))
