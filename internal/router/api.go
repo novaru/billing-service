@@ -13,6 +13,12 @@ func (rt *Router) apiRoutes() chi.Router {
 		r.Post("/register", rt.handlers.User.Create)
 	})
 
+	r.Route("/plans", func(r chi.Router) {
+		// r.Get("/", rt.handlers.Plan.FindAll)
+		// r.Get("/{id}", rt.handlers.Plan.FindByID)
+		r.Post("/", rt.handlers.Plan.Create)
+	})
+
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(rt.config))
 		r.Use(middleware.APIKeyAuth())
