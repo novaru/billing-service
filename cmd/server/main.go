@@ -40,13 +40,16 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(q)
+	planRepo := repository.NewPlanRepository(q)
 
 	// Initialize services
 	userService := service.NewUserService(cfg, userRepo)
+	planService := service.NewPlanService(planRepo)
 
 	// Initialize handlers
 	handlers := handler.New(
 		userService,
+		planService,
 	)
 
 	// Setup router
