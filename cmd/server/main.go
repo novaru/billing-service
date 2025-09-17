@@ -18,6 +18,8 @@ import (
 	"github.com/novaru/billing-service/internal/config"
 	"github.com/novaru/billing-service/internal/database"
 	"github.com/novaru/billing-service/internal/router"
+	E "github.com/novaru/billing-service/internal/shared/errors"
+	"github.com/novaru/billing-service/internal/shared/response"
 	"github.com/novaru/billing-service/pkg/logger"
 )
 
@@ -54,6 +56,14 @@ func main() {
 
 	// Setup router
 	r := router.New(cfg, handlers).Setup()
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Health(r.Context()); err != nil {
+			response.WriteError(w, E.NewInternalError("database connection error", err))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
 	// Start server
 	server := &http.Server{
