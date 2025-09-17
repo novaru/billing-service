@@ -23,6 +23,8 @@ type PlanResponse struct {
 
 type PlanService interface {
 	Create(ctx context.Context, slug, name, description string, priceCents int64, currency, interval string, quotaLimits, meta map[string]any) (PlanResponse, error)
+	FindAll(ctx context.Context) ([]PlanResponse, error)
+	FindBySlug(ctx context.Context, slug string) (PlanResponse, error)
 }
 
 type planService struct {
@@ -55,6 +57,67 @@ func (s *planService) Create(ctx context.Context, slug, name, description string
 		Meta:        metaBytes,
 	})
 	if err != nil {
+		return PlanResponse{}, err
+	}
+
+	return PlanResponse{
+		ID:          plan.ID.String(),
+		Slug:        plan.Slug,
+		Name:        plan.Name,
+		Description: plan.Description.String,
+		PriceCents:  plan.PriceCents,
+		Currency:    plan.Currency,
+		Interval:    plan.Interval,
+		QuotaLimits: quotaLimits,
+		Meta:        meta,
+	}, nil
+}
+
+func (s *planService) FindAll(ctx context.Context) ([]PlanResponse, error) {
+	plans, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []PlanResponse
+	for _, plan := range plans {
+		var quotaLimits map[string]any
+		if err := json.Unmarshal(plan.QuotaLimits, &quotaLimits); err != nil {
+			return nil, err
+		}
+		var meta map[string]any
+		if err := json.Unmarshal(plan.Meta, &meta); err != nil {
+			return nil, err
+		}
+
+		resp = append(resp, PlanResponse{
+			ID:          plan.ID.String(),
+			Slug:        plan.Slug,
+			Name:        plan.Name,
+			Description: plan.Description.String,
+			PriceCents:  plan.PriceCents,
+			Currency:    plan.Currency,
+			Interval:    plan.Interval,
+			QuotaLimits: quotaLimits,
+			Meta:        meta,
+		})
+	}
+
+	return resp, nil
+}
+
+func (s *planService) FindBySlug(ctx context.Context, slug string) (PlanResponse, error) {
+	plan, err := s.repo.FindBySlug(ctx, slug)
+	if err != nil {
+		return PlanResponse{}, err
+	}
+
+	var quotaLimits map[string]any
+	if err := json.Unmarshal(plan.QuotaLimits, &quotaLimits); err != nil {
+		return PlanResponse{}, err
+	}
+	var meta map[string]any
+	if err := json.Unmarshal(plan.Meta, &meta); err != nil {
 		return PlanResponse{}, err
 	}
 

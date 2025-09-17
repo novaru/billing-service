@@ -14,8 +14,8 @@ func (rt *Router) apiRoutes() chi.Router {
 	})
 
 	r.Route("/plans", func(r chi.Router) {
-		// r.Get("/", rt.handlers.Plan.FindAll)
-		// r.Get("/{id}", rt.handlers.Plan.FindByID)
+		r.Get("/", rt.handlers.Plan.FindAll)
+		r.Get("/{slug}", rt.handlers.Plan.FindBySlug)
 		r.Post("/", rt.handlers.Plan.Create)
 	})
 

@@ -2,10 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"go.uber.org/zap"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/novaru/billing-service/internal/app/service"
 	E "github.com/novaru/billing-service/internal/shared/errors"
 	"github.com/novaru/billing-service/internal/shared/response"
@@ -56,4 +58,36 @@ func (h *PlanHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.WriteCreated(w, plan)
+}
+
+func (h *PlanHandler) FindAll(w http.ResponseWriter, r *http.Request) {
+	plans, err := h.service.FindAll(r.Context())
+	if err != nil {
+		logger.Debug("could not retrieve plans", zap.Error(err))
+		response.WriteError(w, E.NewInternalError("could not retrieve plans", err))
+		return
+	}
+
+	response.WriteSuccess(w, plans)
+}
+
+func (h *PlanHandler) FindBySlug(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	if slug == "" {
+		response.WriteError(w, E.NewInvalidInputError("slug is required", nil))
+		return
+	}
+
+	plan, err := h.service.FindBySlug(r.Context(), slug)
+	if err != nil {
+		if errors.Is(err, E.ErrNotFound) {
+			response.WriteError(w, E.NewNotFoundError("plan not found", "plan with given slug is not exist"))
+			return
+		}
+		logger.Debug("could not retrieve plan", zap.String("slug", slug), zap.Error(err))
+		response.WriteError(w, E.NewInternalError("could not retrieve plan", err))
+		return
+	}
+
+	response.WriteSuccess(w, plan)
 }
